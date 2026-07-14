@@ -131,10 +131,17 @@
 
   .price-de{font-size:12px;color:#8a8a8a}
   .price-por{font-size:12px;color:#111;font-weight:600}
-  .admintop{max-width:1080px;margin:14px auto 0;padding:0 16px}
   .admin-link{color:#9a958c;cursor:pointer;text-decoration:underline;font-size:12px}
   .tabbtn{background:#eee;color:#111;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;margin-right:8px}
   .tabbtn.on{background:var(--ink);color:#fff}
+  .ofbtn{background:#fff;color:var(--red-dark);border:1.5px solid var(--red);border-radius:9px;padding:9px 14px;font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap}
+  .ofbtn.on{background:var(--red);color:#fff}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:22px}
+  .modal{background:#F4F2EC;border-radius:14px;max-width:940px;width:100%;margin:auto;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .modal-head strong{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:16px}
+  .modal-close{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;font-family:inherit}
+  .discbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff7e6;border:1px solid #ffe2a8;padding:9px;border-radius:9px;margin:8px 0}
 </style>
 </head>
 <body>
@@ -146,14 +153,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script type="text/babel">
-/* ====== CONFIGURACAO — edite so esta parte ====== */
+/* ====== CONFIGURACAO ====== */
 const WHATSAPP = "5521993793746";
 const LOJA = "Bcar Autopeças";
 const SUBTITULO = "Liquidação total — Tijuca, Rio de Janeiro";
 const SUPABASE_URL = "https://pyydnicvltkioovtvzfk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EKPwmSHp6I-xt3lM1Ma_mg_Squ6YuXA";
 const ADMIN_SENHA = "Ad16eoh28@=";
-/* ================================================= */
+/* ========================== */
 const { useState, useMemo, useEffect } = React;
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const brl = n => Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -161,7 +168,6 @@ const num = v => (v==null?0:Number(v));
 const emOferta = p => num(p.preco_venda)>0 && num(p.preco_custo)>0;
 const precoAtual = p => emOferta(p) ? num(p.preco_custo) : (num(p.preco_venda)>0 ? num(p.preco_venda) : null);
 const descPct = p => emOferta(p) ? Math.round((1 - num(p.preco_custo)/num(p.preco_venda))*100) : 0;
-const OFERTAS = "__ofertas__";
 
 function linkWpp(p){
   const cod=p.codigo_principal||"", nome=p.produto||"", pr=precoAtual(p);
@@ -208,7 +214,7 @@ function Card({p}){
                 <span className="price-de">De <span className="price-old">{brl(p.preco_venda)}</span></span>
                 <span className="price-por">Por <span className="price-now">{brl(p.preco_custo)}</span></span>
               </React.Fragment>
-            : (num(p.preco_venda)>0 ? <span className="price-now">{brl(p.preco_venda)}</span> : <span className="price-consulta">Consulte preço</span>)}
+            : (num(p.preco_venda)>0 ? <span className="price-now">{brl(p.preco_venda)}</span> : <span className="price-consulta">Consultar preço</span>)}
         </div>
         <a className="wpp" href={linkWpp(p)} target="_blank" rel="noopener"><IconWpp/> {precoAtual(p)!=null?"Pedir no WhatsApp":"Consultar no WhatsApp"}</a>
       </div>
@@ -223,15 +229,15 @@ function LinhaPreco({p,onSalvar}){
     <div className="arow">
       <span className="cd">{p.codigo_principal}</span>
       <span className="nm">{p.produto}</span>
-      <label style={{fontSize:11,color:'#888'}}>De(venda)</label>
-      <input className="inp" style={{width:95}} inputMode="decimal" placeholder="0,00" value={v} onChange={e=>setV(e.target.value)}/>
-      <label style={{fontSize:11,color:'#888'}}>Por(custo)</label>
-      <input className="inp" style={{width:95}} inputMode="decimal" placeholder="0,00" value={c} onChange={e=>setC(e.target.value)}/>
+      <label style={{fontSize:11,color:'#888'}}>Venda</label>
+      <input className="inp" style={{width:90}} inputMode="decimal" placeholder="0,00" value={v} onChange={e=>setV(e.target.value)}/>
+      <label style={{fontSize:11,color:'#888'}}>Custo</label>
+      <input className="inp" style={{width:90}} inputMode="decimal" placeholder="0,00" value={c} onChange={e=>setC(e.target.value)}/>
       <button className="btn sec" onClick={()=>onSalvar(p.codigo_principal, v, c)}>Salvar</button>
     </div>
   );
 }
-function Admin({produtos, grupos, fimOferta, onPrazo, onPreco, onReload}){
+function Admin({produtos, grupos, fimOferta, onClose, onPrazo, onPreco, onReload}){
   const [senha,setSenha]=useState("");
   const [ok,setOk]=useState(false);
   const [prazo,setPrazo]=useState((fimOferta||"").slice(0,16));
@@ -239,7 +245,8 @@ function Admin({produtos, grupos, fimOferta, onPrazo, onPreco, onReload}){
   const [aba,setAba]=useState("produto");
   const [busca,setBusca]=useState("");
   const [gsel,setGsel]=useState("");
-  const [gpct,setGpct]=useState("");
+  const [descTipo,setDescTipo]=useState("pct");
+  const [descVal,setDescVal]=useState("");
   useEffect(()=>{ setPrazo((fimOferta||"").slice(0,16)); },[fimOferta]);
   function entrar(){ if(senha===ADMIN_SENHA){ setOk(true); setMsg(null);} else setMsg({t:"err",m:"Senha incorreta."}); }
   async function salvarPrazo(){
@@ -252,21 +259,21 @@ function Admin({produtos, grupos, fimOferta, onPrazo, onPreco, onReload}){
     const pv=parseFloat(String(venda).replace(',','.')), pc=parseFloat(String(custo).replace(',','.'));
     if(isNaN(pv)||isNaN(pc)){ setMsg({t:"err",m:"Preço inválido em "+cod}); return; }
     const { error } = await sb.rpc('admin_set_precos',{ p_senha:senha, p_codigo:cod, p_venda:pv, p_custo:pc });
-    if(error) setMsg({t:"err",m:"Erro: "+error.message}); else { onPreco(cod, pv, pc); setMsg({t:"ok",m:cod+" salvo: De "+brl(pv)+" / Por "+brl(pc)}); }
+    if(error) setMsg({t:"err",m:"Erro: "+error.message}); else { onPreco(cod, pv, pc); setMsg({t:"ok",m:cod+" salvo: venda "+brl(pv)+" / custo "+brl(pc)}); }
   }
-  async function aplicarGrupo(){
-    const pct=parseFloat(String(gpct).replace(',','.'));
-    if(!gsel){ setMsg({t:"err",m:"Escolha um grupo."}); return; }
-    if(isNaN(pct)){ setMsg({t:"err",m:"Informe o % de desconto."}); return; }
+  async function aplicarDesconto(cods){
+    const v=parseFloat(String(descVal).replace(',','.'));
+    if(!cods.length){ setMsg({t:"err",m:"Nenhum produto listado."}); return; }
+    if(isNaN(v)){ setMsg({t:"err",m:"Informe o desconto."}); return; }
     setMsg({t:"ok",m:"Aplicando…"});
-    const { data, error } = await sb.rpc('admin_desconto_grupo',{ p_senha:senha, p_grupo:gsel, p_pct:pct });
+    const { data, error } = await sb.rpc('admin_desc_codigos',{ p_senha:senha, p_codigos:cods, p_tipo:descTipo, p_valor:v });
     if(error) setMsg({t:"err",m:"Erro: "+error.message});
-    else { await onReload(); setMsg({t:"ok",m:(data||0)+" produto(s) do grupo \""+gsel+"\" com "+pct+"% de desconto (Por = custo calculado)."}); }
+    else { await onReload(); setMsg({t:"ok",m:(data||0)+" produto(s) com desconto de "+(descTipo==='pct'?v+"%":brl(v))+" (Por = venda − desconto)."}); }
   }
   if(!ok){
     return (
-      <div className="admin-card">
-        <h3>Área do lojista — entrar</h3>
+      <div>
+        <h3 style={{marginTop:4}}>Área do lojista — entrar</h3>
         <div className="arow" style={{borderBottom:'none'}}>
           <input className="inp" type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')entrar();}}/>
           <button className="btn" onClick={entrar}>Entrar</button>
@@ -276,9 +283,12 @@ function Admin({produtos, grupos, fimOferta, onPrazo, onPreco, onReload}){
     );
   }
   const termo=busca.trim().toLowerCase();
-  const lista = termo ? produtos.filter(p => (p.produto||"").toLowerCase().includes(termo) || (p.codigo_principal||"").toLowerCase().includes(termo)).slice(0,60) : [];
+  const lista = aba==="produto"
+    ? (termo ? produtos.filter(p => (p.produto||"").toLowerCase().includes(termo) || (p.codigo_principal||"").toLowerCase().includes(termo)).slice(0,150) : [])
+    : (gsel ? produtos.filter(p => p.grupo===gsel) : []);
+  const cods = lista.map(p=>p.codigo_principal);
   return (
-    <React.Fragment>
+    <div>
       <div className="admin-card">
         <h3>Prazo da oferta (cronômetro)</h3>
         <div className="arow" style={{borderBottom:'none'}}>
@@ -288,33 +298,38 @@ function Admin({produtos, grupos, fimOferta, onPrazo, onPreco, onReload}){
       </div>
       <div className="admin-card">
         <h3>Alterar preços</h3>
-        <div style={{marginBottom:10}}>
-          <button className={"tabbtn"+(aba==="produto"?" on":"")} onClick={()=>setAba("produto")}>Por produto</button>
-          <button className={"tabbtn"+(aba==="grupo"?" on":"")} onClick={()=>setAba("grupo")}>Por grupo</button>
+        <div style={{marginBottom:8}}>
+          <button className={"tabbtn"+(aba==="produto"?" on":"")} onClick={()=>{setAba("produto");}}>Por produto</button>
+          <button className={"tabbtn"+(aba==="grupo"?" on":"")} onClick={()=>{setAba("grupo");}}>Por grupo</button>
         </div>
-        {aba==="produto" && <React.Fragment>
-          <div className="arow" style={{borderBottom:'none'}}>
-            <input className="inp" style={{flex:1,minWidth:220}} placeholder="Buscar produto por nome ou código…" value={busca} onChange={e=>setBusca(e.target.value)}/>
-          </div>
-          <div className="note">Edite De (preço de venda) e Por (preço de custo). {!termo && "Digite acima para localizar."}</div>
-          {termo && lista.length===0 && <div className="note">Nenhum produto encontrado.</div>}
-          {lista.map(p=> <LinhaPreco key={p.codigo_principal} p={p} onSalvar={salvarPreco}/> )}
-          {termo && lista.length===60 && <div className="note">Mostrando os primeiros 60. Refine a busca.</div>}
-        </React.Fragment>}
-        {aba==="grupo" && <React.Fragment>
-          <div className="note">Aplica um desconto % a todos os produtos do grupo: o "Por" (custo) vira o preço de venda menos o desconto.</div>
-          <div className="arow" style={{borderBottom:'none'}}>
-            <select className="inp" style={{minWidth:240}} value={gsel} onChange={e=>setGsel(e.target.value)}>
-              <option value="">Escolha o grupo…</option>
-              {grupos.map(g=><option key={g} value={g}>{g}</option>)}
-            </select>
-            <input className="inp" style={{width:120}} inputMode="decimal" placeholder="% desconto" value={gpct} onChange={e=>setGpct(e.target.value)}/>
-            <button className="btn" onClick={aplicarGrupo}>Aplicar ao grupo</button>
-          </div>
-        </React.Fragment>}
+        {aba==="produto"
+          ? <div className="arow" style={{borderBottom:'none'}}>
+              <input className="inp" style={{flex:1,minWidth:240}} placeholder="Buscar produto por nome ou código…" value={busca} onChange={e=>setBusca(e.target.value)}/>
+            </div>
+          : <div className="arow" style={{borderBottom:'none'}}>
+              <select className="inp" style={{minWidth:260}} value={gsel} onChange={e=>setGsel(e.target.value)}>
+                <option value="">Escolha o grupo…</option>
+                {grupos.map(g=><option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>}
+        {lista.length>0 && <div className="discbar">
+          <strong style={{fontSize:13}}>Desconto nos {lista.length} listados:</strong>
+          <select className="inp" value={descTipo} onChange={e=>setDescTipo(e.target.value)}>
+            <option value="pct">% sobre a venda</option>
+            <option value="val">R$ sobre a venda</option>
+          </select>
+          <input className="inp" style={{width:120}} inputMode="decimal" placeholder={descTipo==='pct'?'% desconto':'R$ desconto'} value={descVal} onChange={e=>setDescVal(e.target.value)}/>
+          <button className="btn" onClick={()=>aplicarDesconto(cods)}>Aplicar desconto</button>
+        </div>}
+        {aba==="produto" && !termo && <div className="note">Digite acima para listar os produtos (ex.: "axial").</div>}
+        {aba==="grupo" && !gsel && <div className="note">Escolha um grupo para listar os produtos.</div>}
+        {(termo||gsel) && lista.length===0 && <div className="note">Nenhum produto encontrado.</div>}
+        <div className="note" style={{marginTop:6}}>Nome · Venda · Custo — edite manualmente e Salvar, ou use o desconto acima.</div>
+        {lista.map(p=> <LinhaPreco key={p.codigo_principal+'_'+p.preco_venda+'_'+p.preco_custo} p={p} onSalvar={salvarPreco}/> )}
+        {aba==="produto" && lista.length===150 && <div className="note">Mostrando os primeiros 150. Refine a busca.</div>}
       </div>
       {msg && <div className="admin-card"><span className={msg.t==='ok'?'msg-ok':'msg-err'}>{msg.m}</span></div>}
-    </React.Fragment>
+    </div>
   );
 }
 function App(){
@@ -324,6 +339,7 @@ function App(){
   const [erro,setErro]=useState(null);
   const [q,setQ]=useState("");
   const [cat,setCat]=useState("Todas");
+  const [soOfertas,setSoOfertas]=useState(false);
   const [showAdmin,setShowAdmin]=useState(/admin/i.test(location.search+location.hash));
 
   async function carregar(){
@@ -348,17 +364,16 @@ function App(){
   const filtrados=useMemo(()=>{
     const termo=q.trim().toLowerCase();
     return produtos.filter(p=>{
-      const okCat = cat===OFERTAS ? emOferta(p) : (cat==="Todas" || p.grupo===cat);
+      const okCat = (cat==="Todas" || p.grupo===cat) && (!soOfertas || emOferta(p));
       const okQ = !termo || (p.produto||"").toLowerCase().includes(termo) || (p.codigo_principal||"").toLowerCase().includes(termo) || (p.marca||"").toLowerCase().includes(termo) || (p.equivalentes||"").toLowerCase().includes(termo);
       return okCat && okQ;
     });
-  },[produtos,q,cat]);
+  },[produtos,q,cat,soOfertas]);
   const visiveis=filtrados.slice(0,LIMITE);
 
   function onPrazo(v){ setFimOferta(v); }
   function onPreco(cod,venda,custo){ setProdutos(ps=>ps.map(p=>p.codigo_principal===cod?{...p,preco_venda:venda,preco_custo:custo}:p)); }
   async function onReload(){ try{ await carregar(); }catch(e){} }
-  function toggleAdmin(){ setShowAdmin(s=>!s); window.scrollTo({top:0,behavior:'smooth'}); }
 
   return (
     <React.Fragment>
@@ -374,7 +389,6 @@ function App(){
           <span className="countdown"><span className="cd-label">{clock.label}</span><span className="cd-clock">{clock.text}</span></span>
         </div>
       </div>
-      {showAdmin && <div className="admintop"><Admin produtos={produtos} grupos={grupos} fimOferta={fimOferta} onPrazo={onPrazo} onPreco={onPreco} onReload={onReload}/></div>}
       <div className="toolbar">
         <div className="wrap">
           <div className="search-box">
@@ -382,17 +396,17 @@ function App(){
             <input type="search" placeholder="Buscar por nome, código, marca ou equivalente…" value={q} onChange={e=>setQ(e.target.value)}/>
           </div>
           <select className="cat-select" value={cat} onChange={e=>setCat(e.target.value)}>
-            <option value={OFERTAS}>🔥 Ofertas{nOfertas?(" ("+nOfertas+")"):""}</option>
             <option value="Todas">Todas as categorias</option>
             {grupos.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
+          <button className={"ofbtn"+(soOfertas?" on":"")} onClick={()=>setSoOfertas(s=>!s)}>{soOfertas?"✓ Só ofertas":"🔥 Ver ofertas"}{nOfertas?(" ("+nOfertas+")"):""}</button>
         </div>
       </div>
       <div className="wrap">
         {carregando && <div className="status">Carregando produtos…</div>}
         {erro && <div className="status">Não foi possível carregar os produtos.<br/><small>{erro}</small></div>}
         {!carregando && !erro && <React.Fragment>
-          <div className="count">{filtrados.length} {filtrados.length===1?"peça":"peças"}{cat===OFERTAS?" em oferta":""}</div>
+          <div className="count">{filtrados.length} {filtrados.length===1?"peça":"peças"}{soOfertas?" em oferta":""}</div>
           {filtrados.length>LIMITE && <div className="note">Mostrando {LIMITE} de {filtrados.length}. Use a busca ou a categoria para refinar.</div>}
           {visiveis.length>0 ? <div className="grid">{visiveis.map(p=><Card key={p.codigo_principal} p={p}/>)}</div>
             : <div className="empty"><strong>Nada encontrado</strong>Tente outro código, nome ou categoria.</div>}
@@ -403,9 +417,16 @@ function App(){
           {LOJA} — {SUBTITULO}<br/>
           Dúvidas? <a className="wpp-foot" href={"https://wa.me/"+WHATSAPP} target="_blank" rel="noopener">Fale no WhatsApp</a>
           <br/><br/>
-          <span className="admin-link" onClick={toggleAdmin}>{showAdmin?"fechar área do lojista":"área do lojista"}</span>
+          <span className="admin-link" onClick={()=>setShowAdmin(true)}>área do lojista</span>
         </div>
       </footer>
+      {showAdmin &&
+        <div className="modal-bg" onClick={()=>setShowAdmin(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-head"><strong>Área do lojista</strong><button className="modal-close" onClick={()=>setShowAdmin(false)}>Fechar ✕</button></div>
+            <Admin produtos={produtos} grupos={grupos} fimOferta={fimOferta} onClose={()=>setShowAdmin(false)} onPrazo={onPrazo} onPreco={onPreco} onReload={onReload}/>
+          </div>
+        </div>}
     </React.Fragment>
   );
 }
