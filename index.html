@@ -110,6 +110,24 @@
 
   footer{border-top:1px solid var(--line);padding:22px 0 34px;text-align:center;color:var(--muted);font-size:12.5px}
   footer .wpp-foot{color:var(--green-dark);font-weight:600;text-decoration:none}
+
+  .equiv{font-size:11px;color:#6b6b6b;margin:2px 0 6px;line-height:1.35;max-height:50px;overflow:hidden}
+  .price-consulta{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:20px;color:#8a5a00}
+  .cat-select{font-family:inherit;padding:10px 12px;border:1.5px solid #d9d5cc;border-radius:9px;background:#fff;font-size:14px;max-width:230px}
+  .status{padding:26px 0;text-align:center;color:#666;font-size:15px}
+  .note{padding:8px 0 2px;color:#777;font-size:12.5px}
+  .admin-bar{background:#111;color:#fff}
+  .admin-wrap{max-width:1080px;margin:0 auto;padding:16px}
+  .admin-card{background:#fff;border:1.5px solid #e5e1d8;border-radius:12px;padding:16px;margin:14px auto;max-width:1080px}
+  .admin-card h3{margin:0 0 10px;font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:17px}
+  .arow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 0;border-bottom:1px dashed #ececec}
+  .arow .nm{flex:1;min-width:190px;font-size:13.5px}
+  .arow .cd{font-family:'Space Mono',monospace;font-size:12px;color:#888;min-width:70px}
+  .inp{font-family:inherit;padding:8px 10px;border:1.5px solid #d9d5cc;border-radius:8px;font-size:14px}
+  .btn{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .btn.sec{background:#e9e9e9;color:#111}
+  .msg-ok{color:#166534;font-weight:700;font-size:13px}
+  .msg-err{color:#b91c1c;font-weight:700;font-size:13px}
 </style>
 </head>
 <body>
@@ -118,75 +136,48 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script type="text/babel">
 /* ============================================================
    >>> CONFIGURAÇÃO — edite só esta parte <<<
    ============================================================ */
-
-// Seu WhatsApp com DDI+DDD, só números. Ex: 5521998765432
-const WHATSAPP = "5521993793746";
-
+const WHATSAPP = "5521993793746";           // WhatsApp da loja (DDI+DDD+numero)
 const LOJA = "Bcar Autopeças";
 const SUBTITULO = "Liquidação total — Tijuca, Rio de Janeiro";
 
-// >>> PRAZO DA OFERTA RELÂMPAGO <<<
-// O cronômetro no topo conta de forma decrescente até esta data/hora (horário local).
-// Formato: "ANO-MES-DIAThora:min:seg" (24h). Ex.: 20/07/2026 às 18:00 -> "2026-07-20T18:00:00"
-// Para trocar o prazo, é só alterar a linha abaixo. Ao zerar, aparece "Encerrada".
-const FIM_OFERTA = "2026-07-20T18:00:00";
+// Supabase (chave publica — pode ficar visivel)
+const SUPABASE_URL = "https://pyydnicvltkioovtvzfk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EKPwmSHp6I-xt3lM1Ma_mg_Squ6YuXA";
 
-// Produtos. Para cada um:
-//  codigo    -> código/referência da peça (aparece na busca e no WhatsApp)
-//  nome      -> nome do produto
-//  categoria -> usada nos filtros (chips)
-//  de        -> preço antigo (0 = não mostra "de/por")
-//  por       -> preço de liquidação
-//  img       -> URL ou caminho da foto (ex: "fotos/pastilha.jpg"). Vazio = mostra o código.
-//  relampago -> true para entrar na OFERTA RELÂMPAGO do dia
-const PRODUTOS = [
-  { codigo:"PF-8842", nome:"Pastilha de freio dianteira", categoria:"Freios",      de:189.90, por:99.90,  img:"", relampago:true  },
-  { codigo:"FO-1203", nome:"Filtro de óleo",              categoria:"Filtros",     de:38.00,  por:19.90,  img:"", relampago:true  },
-  { codigo:"VL-5567", nome:"Jogo de velas de ignição (4)",categoria:"Ignição",     de:120.00, por:69.90,  img:"", relampago:false },
-  { codigo:"AM-3391", nome:"Amortecedor dianteiro",       categoria:"Suspensão",   de:340.00, por:229.00, img:"", relampago:false },
-  { codigo:"CR-7714", nome:"Correia dentada",             categoria:"Motor",       de:95.00,  por:54.90,  img:"", relampago:true  },
-  { codigo:"BT-0060", nome:"Bateria 60Ah",                categoria:"Elétrica",    de:520.00, por:379.00, img:"", relampago:false },
-  { codigo:"FA-2218", nome:"Filtro de ar",                categoria:"Filtros",     de:52.00,  por:27.90,  img:"", relampago:false },
-  { codigo:"DF-9004", nome:"Disco de freio ventilado",    categoria:"Freios",      de:210.00, por:139.00, img:"", relampago:false },
-  { codigo:"OL-1155", nome:"Óleo 5W30 sintético 1L",      categoria:"Lubrificantes",de:59.90, por:34.90,  img:"", relampago:false },
-  { codigo:"BR-4420", nome:"Bomba d'água",                categoria:"Arrefecimento",de:180.00,por:109.00, img:"", relampago:false },
-];
+// Senha da area do lojista (Admin). Obs: fica visivel no codigo desta pagina.
+const ADMIN_SENHA = "Ad16eoh28@=";
 
 /* ============================================================
-   >>> Daqui pra baixo é o funcionamento — não precisa mexer <<<
+   >>> Daqui pra baixo e o funcionamento <<<
    ============================================================ */
-
 const { useState, useMemo, useEffect } = React;
-const brl = n => n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const desconto = (de,por) => de>0 ? Math.round((1 - por/de)*100) : 0;
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const brl = n => Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const temPreco = p => (Number(p.quantidade)>0 && p.preco_venda!=null && Number(p.preco_venda)>0);
 
 function linkWpp(p){
-  const preco = brl(p.por);
-  const msg = `Olá! Tenho interesse na peça ${p.codigo} — ${p.nome} por ${preco}. Ainda tem disponível?`;
-  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  const preco = temPreco(p) ? brl(p.preco_venda) : "(consultar preço)";
+  const msg = "Olá! Tenho interesse na peça " + (p.codigo_principal||"") + " — " + p.produto + " (" + preco + "). Ainda tem disponível?";
+  return "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
 }
 
-function useCountdown(){
-  const alvo = new Date(FIM_OFERTA).getTime();
-  function restante(){ return isNaN(alvo) ? 0 : Math.max(0, alvo - Date.now()); }
-  const [t,setT] = useState(restante());
-  useEffect(()=>{
-    const id = setInterval(()=>setT(restante()),1000);
-    return ()=>clearInterval(id);
-  },[]);
-  if(isNaN(alvo) || t<=0) return {expired:true, label:"Oferta", text:"Encerrada"};
-  const s = Math.floor(t/1000);
-  const d  = Math.floor(s/86400);
-  const hh = String(Math.floor((s%86400)/3600)).padStart(2,'0');
-  const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
-  const ss = String(s%60).padStart(2,'0');
-  const text = d>0 ? (d+"d "+hh+":"+mm+":"+ss) : (hh+":"+mm+":"+ss);
-  return {expired:false, label:"Acaba em", text};
+function useCountdown(fim){
+  function restante(){ const a=new Date(fim).getTime(); return isNaN(a)?0:Math.max(0,a-Date.now()); }
+  const [t,setT]=useState(restante());
+  useEffect(()=>{ const id=setInterval(()=>setT(restante()),1000); return ()=>clearInterval(id); },[fim]);
+  const a=new Date(fim).getTime();
+  if(!fim || isNaN(a) || t<=0) return {expired:true,label:"Oferta",text:"Encerrada"};
+  const s=Math.floor(t/1000), d=Math.floor(s/86400);
+  const hh=String(Math.floor((s%86400)/3600)).padStart(2,'0');
+  const mm=String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss=String(s%60).padStart(2,'0');
+  return {expired:false,label:"Acaba em",text:(d>0?d+"d ":"")+hh+":"+mm+":"+ss};
 }
 
 function IconGear(){
@@ -197,103 +188,212 @@ function IconWpp(){
 }
 
 function Card({p}){
-  const off = desconto(p.de,p.por);
   return (
-    <div className={"card"+(p.relampago?" hot":"")}>
+    <div className="card">
       <div className="thumb">
-        {p.img
-          ? <img src={p.img} alt={p.nome} onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='block'}}/>
-          : null}
-        <div className="thumb-fallback" style={{display:p.img?'none':'block'}}>
+        <div className="thumb-fallback" style={{display:'block'}}>
           <IconGear/>
-          <div className="fb-code">{p.codigo}</div>
+          <div className="fb-code">{p.codigo_principal||"—"}</div>
         </div>
-        {p.relampago && <span className="hot-badge">⚡ Relâmpago</span>}
-        {off>0 && <span className="off-badge">-{off}%</span>}
+        {p.marca && <span className="off-badge" style={{background:'#111',color:'#fff'}}>{p.marca}</span>}
       </div>
       <div className="body">
-        <span className="cat">{p.categoria}</span>
-        <div className="name">{p.nome}</div>
-        <div className="code">Ref. {p.codigo}</div>
+        <span className="cat">{p.grupo}</span>
+        <div className="name">{p.produto}</div>
+        <div className="code">Ref. {p.codigo_principal||"—"}</div>
+        {p.equivalentes && <div className="equiv">Equivalentes: {p.equivalentes}</div>}
         <div className="price-row">
-          {p.de>0 && <span className="price-old">{brl(p.de)}</span>}
-          <span className="price-now">{brl(p.por)}</span>
+          {temPreco(p)
+            ? <span className="price-now">{brl(p.preco_venda)}</span>
+            : <span className="price-consulta">Consulte preço</span>}
         </div>
         <a className="wpp" href={linkWpp(p)} target="_blank" rel="noopener">
-          <IconWpp/> Pedir no WhatsApp
+          <IconWpp/> {temPreco(p) ? "Pedir no WhatsApp" : "Consultar no WhatsApp"}
         </a>
       </div>
     </div>
   );
 }
 
+const LIMITE = 200;
+
+function Admin({produtos, fimOferta, onPrazo, onPreco}){
+  const [senha,setSenha]=useState("");
+  const [ok,setOk]=useState(false);
+  const [prazo,setPrazo]=useState((fimOferta||"").slice(0,16));
+  const [msg,setMsg]=useState(null);
+  const [busca,setBusca]=useState("");
+
+  useEffect(()=>{ setPrazo((fimOferta||"").slice(0,16)); },[fimOferta]);
+
+  function entrar(){ if(senha===ADMIN_SENHA){ setOk(true); setMsg(null);} else { setMsg({t:"err",m:"Senha incorreta."}); } }
+
+  async function salvarPrazo(){
+    setMsg(null);
+    const valor = prazo.length===16 ? prazo+":00" : prazo;
+    const { error } = await sb.rpc('admin_set_prazo',{ p_senha:senha, p_valor:valor });
+    if(error){ setMsg({t:"err",m:"Erro: "+error.message}); }
+    else { onPrazo(valor); setMsg({t:"ok",m:"Prazo atualizado."}); }
+  }
+  async function salvarPreco(cod, val){
+    const preco = parseFloat(String(val).replace(',','.'));
+    if(isNaN(preco)){ setMsg({t:"err",m:"Preço inválido para "+cod}); return; }
+    const { error } = await sb.rpc('admin_set_preco',{ p_senha:senha, p_codigo:cod, p_preco:preco });
+    if(error){ setMsg({t:"err",m:"Erro: "+error.message}); }
+    else { onPreco(cod, preco); setMsg({t:"ok",m:"Preço de "+cod+" salvo: "+brl(preco)}); }
+  }
+
+  if(!ok){
+    return (
+      <div className="admin-card">
+        <h3>Área do lojista</h3>
+        <div className="arow" style={{borderBottom:'none'}}>
+          <input className="inp" type="password" placeholder="Senha" value={senha}
+                 onChange={e=>setSenha(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')entrar();}}/>
+          <button className="btn" onClick={entrar}>Entrar</button>
+          {msg && <span className={msg.t==='ok'?'msg-ok':'msg-err'}>{msg.m}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  const termo = busca.trim().toLowerCase();
+  const lista = termo
+    ? produtos.filter(p => (p.produto||"").toLowerCase().includes(termo) || (p.codigo_principal||"").toLowerCase().includes(termo)).slice(0,60)
+    : [];
+
+  return (
+    <React.Fragment>
+      <div className="admin-card">
+        <h3>Prazo da oferta (cronômetro)</h3>
+        <div className="arow" style={{borderBottom:'none'}}>
+          <input className="inp" type="datetime-local" value={prazo} onChange={e=>setPrazo(e.target.value)}/>
+          <button className="btn" onClick={salvarPrazo}>Salvar prazo</button>
+        </div>
+      </div>
+      <div className="admin-card">
+        <h3>Preços dos produtos</h3>
+        <div className="arow" style={{borderBottom:'none'}}>
+          <input className="inp" style={{flex:1,minWidth:220}} placeholder="Buscar produto por nome ou código para editar…"
+                 value={busca} onChange={e=>setBusca(e.target.value)}/>
+        </div>
+        {!termo && <div className="note">Digite acima para localizar os produtos que quer editar.</div>}
+        {termo && lista.length===0 && <div className="note">Nenhum produto encontrado.</div>}
+        {lista.map(p=>
+          <LinhaPreco key={p.codigo_principal} p={p} onSalvar={salvarPreco}/>
+        )}
+        {termo && lista.length===60 && <div className="note">Mostrando os primeiros 60. Refine a busca.</div>}
+      </div>
+      {msg && <div className="admin-card"><span className={msg.t==='ok'?'msg-ok':'msg-err'}>{msg.m}</span></div>}
+    </React.Fragment>
+  );
+}
+
+function LinhaPreco({p,onSalvar}){
+  const [v,setV]=useState(p.preco_venda!=null?String(p.preco_venda):"");
+  return (
+    <div className="arow">
+      <span className="cd">{p.codigo_principal}</span>
+      <span className="nm">{p.produto}</span>
+      <input className="inp" style={{width:110}} inputMode="decimal" placeholder="0,00"
+             value={v} onChange={e=>setV(e.target.value)}/>
+      <button className="btn sec" onClick={()=>onSalvar(p.codigo_principal, v)}>Salvar</button>
+    </div>
+  );
+}
+
 function App(){
-  const [q,setQ] = useState("");
-  const [cat,setCat] = useState("Todos");
-  const clock = useCountdown();
+  const [produtos,setProdutos]=useState([]);
+  const [fimOferta,setFimOferta]=useState("");
+  const [carregando,setCarregando]=useState(true);
+  const [erro,setErro]=useState(null);
+  const [q,setQ]=useState("");
+  const [cat,setCat]=useState("Todos");
+  const [showAdmin,setShowAdmin]=useState(false);
 
-  const categorias = useMemo(()=>["Todos",...Array.from(new Set(PRODUTOS.map(p=>p.categoria)))],[]);
-  const temRelampago = PRODUTOS.some(p=>p.relampago);
+  useEffect(()=>{ (async()=>{
+    try{
+      const cfg = await sb.from('config').select('valor').eq('chave','fim_oferta').single();
+      if(cfg.data) setFimOferta(cfg.data.valor);
+      const { data, error } = await sb.from('estoque')
+        .select('grupo,produto,codigo_principal,marca,quantidade,preco_venda,equivalentes')
+        .order('grupo',{ascending:true}).order('produto',{ascending:true}).limit(2000);
+      if(error) throw error;
+      setProdutos(data||[]);
+    }catch(e){ setErro(e.message||String(e)); }
+    finally{ setCarregando(false); }
+  })(); },[]);
 
+  const clock = useCountdown(fimOferta);
+  const categorias = useMemo(()=>["Todos",...Array.from(new Set(produtos.map(p=>p.grupo).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'pt-BR'))],[produtos]);
   const filtrados = useMemo(()=>{
-    const termo = q.trim().toLowerCase();
-    return PRODUTOS.filter(p=>{
-      const okCat = cat==="Todos" || p.categoria===cat;
-      const okQ = !termo || p.nome.toLowerCase().includes(termo) || p.codigo.toLowerCase().includes(termo) || p.categoria.toLowerCase().includes(termo);
+    const termo=q.trim().toLowerCase();
+    return produtos.filter(p=>{
+      const okCat = cat==="Todos" || p.grupo===cat;
+      const okQ = !termo || (p.produto||"").toLowerCase().includes(termo) || (p.codigo_principal||"").toLowerCase().includes(termo) || (p.marca||"").toLowerCase().includes(termo) || (p.equivalentes||"").toLowerCase().includes(termo);
       return okCat && okQ;
     });
-  },[q,cat]);
+  },[produtos,q,cat]);
+  const visiveis = filtrados.slice(0,LIMITE);
+
+  function onPrazo(v){ setFimOferta(v); }
+  function onPreco(cod, preco){ setProdutos(ps=>ps.map(p=>p.codigo_principal===cod?{...p,preco_venda:preco}:p)); }
 
   return (
     <React.Fragment>
       <header>
         <div className="wrap head-row">
-          <div className="brand">
-            <h1>{LOJA}</h1>
-            <span className="tag">ESTOQUE FINAL</span>
-          </div>
+          <div className="brand"><h1>{LOJA}</h1><span className="tag">ESTOQUE FINAL</span></div>
           <span className="head-sub">{SUBTITULO}</span>
         </div>
       </header>
 
-      {temRelampago &&
-        <div className="flash">
-          <div className="flash-inner">
-            <span className="flash-title"><span className="bolt">⚡</span>Oferta relâmpago de hoje</span>
-            <span className="countdown">
-              <span className="cd-label">{clock.label}</span>
-              <span className="cd-clock">{clock.text}</span>
-            </span>
-          </div>
+      <div className="flash">
+        <div className="flash-inner">
+          <span className="flash-title"><span className="bolt">⚡</span>Oferta relâmpago</span>
+          <span className="countdown">
+            <span className="cd-label">{clock.label}</span>
+            <span className="cd-clock">{clock.text}</span>
+          </span>
         </div>
-      }
+      </div>
 
       <div className="toolbar">
         <div className="wrap">
           <div className="search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" placeholder="Buscar por código ou nome da peça…" value={q} onChange={e=>setQ(e.target.value)}/>
+            <input type="search" placeholder="Buscar por nome, código, marca ou equivalente…" value={q} onChange={e=>setQ(e.target.value)}/>
           </div>
-          <div className="chips">
-            {categorias.map(c=>
-              <span key={c} className={"chip"+(cat===c?" on":"")} onClick={()=>setCat(c)}>{c}</span>
-            )}
-          </div>
+          <select className="cat-select" value={cat} onChange={e=>setCat(e.target.value)}>
+            {categorias.map(c=><option key={c} value={c}>{c==="Todos"?"Todas as categorias":c}</option>)}
+          </select>
         </div>
       </div>
 
       <div className="wrap">
-        <div className="count">{filtrados.length} {filtrados.length===1?"peça":"peças"}</div>
-        {filtrados.length>0
-          ? <div className="grid">{filtrados.map(p=><Card key={p.codigo} p={p}/>)}</div>
-          : <div className="empty"><strong>Nada encontrado</strong>Tente outro código ou nome de peça.</div>
-        }
+        {carregando && <div className="status">Carregando produtos…</div>}
+        {erro && <div className="status">Não foi possível carregar os produtos.<br/><small>{erro}</small></div>}
+        {!carregando && !erro && <React.Fragment>
+          <div className="count">{filtrados.length} {filtrados.length===1?"peça":"peças"}</div>
+          {filtrados.length>LIMITE && <div className="note">Mostrando {LIMITE} de {filtrados.length}. Use a busca ou a categoria para refinar.</div>}
+          {visiveis.length>0
+            ? <div className="grid">{visiveis.map(p=><Card key={p.codigo_principal} p={p}/>)}</div>
+            : <div className="empty"><strong>Nada encontrado</strong>Tente outro código, nome ou categoria.</div>}
+        </React.Fragment>}
       </div>
+
+      {showAdmin &&
+        <div className="admin-bar">
+          <div className="admin-wrap"><strong>ÁREA DO LOJISTA</strong></div>
+        </div>}
+      {showAdmin && <Admin produtos={produtos} fimOferta={fimOferta} onPrazo={onPrazo} onPreco={onPreco}/>}
 
       <footer>
         <div className="wrap">
           {LOJA} — {SUBTITULO}<br/>
-          Dúvidas? <a className="wpp-foot" href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener">Fale no WhatsApp</a>
+          Dúvidas? <a className="wpp-foot" href={"https://wa.me/"+WHATSAPP} target="_blank" rel="noopener">Fale no WhatsApp</a>
+          <br/><br/>
+          <span className="admin-link" onClick={()=>setShowAdmin(s=>!s)}>{showAdmin?"Fechar área do lojista":"Área do lojista"}</span>
         </div>
       </footer>
     </React.Fragment>
