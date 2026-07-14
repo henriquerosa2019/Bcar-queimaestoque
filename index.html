@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bcar Autopeças — Liquidação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Narrow:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#16150F;--paper:#F4F2EC;--card:#FFFFFF;--line:#DCD9CF;--muted:#77746B;--red:#E02A1B;--red-dark:#B01D11;--hazard:#FFC400;--green:#128C3E;--green-dark:#0C6B2E}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Archivo',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+  header{background:var(--ink);color:#F4F2EC;padding:14px 0}
+  .head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:26px;letter-spacing:.02em;text-transform:uppercase}
+  .brand .tag{font-family:'Space Mono',monospace;font-size:11px;color:var(--hazard);border:1px solid var(--hazard);padding:2px 6px;border-radius:3px;white-space:nowrap}
+  .head-sub{font-size:12.5px;color:#B8B5AC;font-weight:500}
+  .flash{background:var(--red);color:#fff;border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);background-image:repeating-linear-gradient(45deg,transparent 0 22px,rgba(0,0,0,.10) 22px 44px)}
+  .flash-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;max-width:1080px;margin:0 auto;flex-wrap:wrap}
+  .flash-title{font-family:'Archivo Narrow',sans-serif;font-weight:700;text-transform:uppercase;font-size:19px;letter-spacing:.03em;display:flex;align-items:center;gap:9px}
+  .bolt{background:var(--hazard);color:var(--ink);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:17px;flex-shrink:0}
+  .countdown{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace}
+  .cd-label{font-size:11px;text-transform:uppercase;opacity:.85;letter-spacing:.05em}
+  .cd-clock{background:rgba(0,0,0,.28);padding:5px 10px;border-radius:5px;font-size:17px;font-weight:700;letter-spacing:.05em}
+  .toolbar{position:sticky;top:0;z-index:20;background:var(--paper);padding:16px 0 10px;border-bottom:1px solid var(--line)}
+  .search-box{position:relative}
+  .search-box svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--muted)}
+  input[type=search]{width:100%;font-family:'Archivo',sans-serif;font-size:16px;font-weight:500;padding:15px 16px 15px 46px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);outline:none}
+  input[type=search]::placeholder{color:var(--muted);font-weight:400}
+  input[type=search]:focus{border-color:var(--red)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;-webkit-overflow-scrolling:touch}
+  .chip{font-family:'Space Mono',monospace;font-size:12.5px;white-space:nowrap;cursor:pointer;padding:7px 13px;border:1.5px solid var(--line);border-radius:20px;background:var(--card);color:var(--muted);transition:all .12s;user-select:none}
+  .chip:hover{border-color:var(--ink)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .count{font-size:13px;color:var(--muted);padding:14px 0 4px;font-family:'Space Mono',monospace}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;padding:8px 0 40px}
+  @media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+  @media(min-width:860px){.grid{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(22,21,15,.10)}
+  .card.hot{border-color:var(--red)}
+  .thumb{position:relative;aspect-ratio:4/3;background:#EFEDE6;display:grid;place-items:center;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb-fallback{text-align:center;padding:10px}
+  .thumb-fallback .fb-code{font-family:'Space Mono',monospace;font-size:15px;color:var(--muted);font-weight:700}
+  .thumb-fallback .fb-icon{width:38px;height:38px;color:#C4C1B6;margin:0 auto 8px}
+  .hot-badge{position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-family:'Archivo Narrow',sans-serif;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.04em;padding:4px 9px;border-radius:5px}
+  .brand-badge{position:absolute;top:10px;right:10px;background:var(--ink);color:#fff;font-family:'Space Mono',monospace;font-weight:700;font-size:11px;letter-spacing:.03em;padding:4px 8px;border-radius:5px}
+  .body{padding:13px 14px 15px;display:flex;flex-direction:column;flex:1}
+  .cat{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .name{font-weight:600;font-size:15.5px;line-height:1.25;margin:5px 0 3px}
+  .code{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)}
+  .equiv{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.35}
+  .equiv b{font-family:'Space Mono',monospace;color:var(--ink);font-weight:700}
+  .stock{font-family:'Space Mono',monospace;font-size:11px;color:var(--green-dark);margin-top:5px}
+  .price-row{margin-top:12px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .price-old{font-size:13.5px;color:var(--muted);text-decoration:line-through}
+  .price-now{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:26px;color:var(--red-dark)}
+  .price-now.consulta{font-size:19px;color:var(--muted)}
+  .wpp{margin-top:13px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#fff;font-family:'Archivo',sans-serif;font-weight:600;font-size:15px;padding:12px;border-radius:10px;text-decoration:none;transition:background .12s}
+  .wpp:hover{background:var(--green-dark)}
+  .wpp svg{width:19px;height:19px}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .empty strong{display:block;font-size:18px;color:var(--ink);margin-bottom:6px;font-family:'Archivo Narrow',sans-serif;text-transform:uppercase}
+  footer{border-top:1px solid var(--line);padding:22px 0 34px;text-align:center;color:var(--muted);font-size:12.5px}
+  footer .wpp-foot{color:var(--green-dark);font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script type="text/babel">
+/* ===== CONFIGURACAO — edite so aqui ===== */
+const WHATSAPP = "5521993793746";   // seu numero: DDI+DDD+numero, so digitos
+const LOJA = "Bcar Autopecas";
+const SUBTITULO = "Liquidacao — lote de teste";
+const TOP_GRUPOS = ["BOBINA DE IGUINICAO", "FILTRO DE OLEO", "LAMPADA", "LENTE RETROVISOR"];
+const PRODUTOS = [{"codigo":"007421","nome":"BOBINA AZERA,SOREN,VERA CRUZ,SANTAFE, MAGEN,CARENS","categoria":"BOBINA DE IGUINICAO","por":131.7,"relampago":false,"marca":"YMAX","qtd":2},{"codigo":"004895","nome":"BOBINA CIVIC 1.7 01/TDS MODELO","categoria":"BOBINA DE IGUINICAO","por":186.18,"relampago":false,"marca":"YMAX","qtd":2,"equiv":"001070 - BOBINA CIVIC 1.7 01/ | 009408 - BOBINA CIVIC LX/EX 1.7 16V - 01/","equivCod":["001070","009408"]},{"codigo":"003996","nome":"BOBINA COROLLA 1.8-2.0 VVTI-FLEX 08/14","categoria":"BOBINA DE IGUINICAO","por":163.64,"relampago":false,"marca":"YMAX","qtd":2,"equiv":"008309 - BOBINA COROLLA 1.8-2.0 16V VVTI-FLEX 08/14","equivCod":["008309"]},{"codigo":"008396","nome":"BOBINA ETIOS 1.5 16V ../16 - FLEX APLICA ATE 2016","categoria":"BOBINA DE IGUINICAO","por":205.05,"relampago":false,"marca":"YMAX","qtd":2,"equiv":"006640 - BOBINA ETIOS 1.5 16V ../16 - FLEX | 008380 - BOBINA ETIOS/YARIS 1.5 - 17/...MOD NOVO","equivCod":["006640","008380"]},{"codigo":"004559","nome":"FILTRO OLEO ETIOS 1.3-1.5 16V MEC/AUT FLEX 13/","categoria":"FILTRO DE OLEO","por":29.01,"relampago":false,"qtd":2},{"codigo":"010719","nome":"FILTRO OLEO FIAT /MITSUBI/VW TR4/DOBLO","categoria":"FILTRO DE OLEO","por":16.09,"relampago":false,"qtd":2,"equiv":"000950 - FILTRO OLEO ACCORD, CITY,CIVIC,CRV,FIT,NEW CIVIC | 001022 - FILTRO OLEO PAJE 3.0-ECLIPSE-GALANT-LANCER-COLT-J3","equivCod":["000950","001022"]},{"codigo":"010592","nome":"FILTRO OLEO KWID 1.0 3CIL 2017...","categoria":"FILTRO DE OLEO","por":21.34,"relampago":false,"qtd":2},{"codigo":"007392","nome":"FILTRO OLEO LOGAN-SANDERO 1.0 12V 17/ FLUENCE 2.0","categoria":"FILTRO DE OLEO","por":23.23,"relampago":false,"qtd":2},{"codigo":"012167","nome":"FILTRO OLEO TCROSS-UP-NIVUS-POLO-JETTA-A3 TUDO 2015/","categoria":"FILTRO DE OLEO","por":38.95,"relampago":false,"qtd":2},{"codigo":"011901","nome":"LAMPADA 60/55W - H4 SUPER BRANCA CINOY","categoria":"LAMPADA","por":36.12,"relampago":false,"qtd":2},{"codigo":"006538","nome":"LENTE METALIZADA CLIO 2012/ LE C/ BASE","categoria":"LENTE RETROVISOR","por":29.0,"relampago":false,"qtd":2},{"codigo":"006543","nome":"LENTE METALIZADA ETIOS LD 12/13","categoria":"LENTE RETROVISOR","por":49.0,"relampago":false,"qtd":2},{"codigo":"000950","nome":"FILTRO OLEO - PSL55 (AZUL)","categoria":"FILTRO DE OLEO","por":0,"relampago":false,"qtd":2}];
+/* ===== fim da configuracao ===== */
+
+const { useState, useMemo, useEffect } = React;
+const brl = n => n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const desconto = (de,por) => de>0 ? Math.round((1 - por/de)*100) : 0;
+
+function linkWpp(p){
+  const msg = p.por>0
+    ? `Ola! Tenho interesse na peca ${p.codigo} — ${p.nome} por ${brl(p.por)}. Ainda tem disponivel?`
+    : `Ola! Qual o preco e a disponibilidade da peca ${p.codigo} — ${p.nome}?`;
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+function useCountdown(){
+  const calc=()=>{const a=new Date();const f=new Date(a);f.setHours(23,59,59,999);return Math.max(0,f-a);};
+  const [t,setT]=useState(calc());
+  useEffect(()=>{const id=setInterval(()=>setT(calc()),1000);return()=>clearInterval(id);},[]);
+  const s=Math.floor(t/1000),p=n=>String(n).padStart(2,'0');
+  return `${p(Math.floor(s/3600))}:${p(Math.floor((s%3600)/60))}:${p(s%60)}`;
+}
+function IconGear(){return <svg className="fb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;}
+function IconWpp(){return <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35zM12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.38 5.07L2 22l5.05-1.32A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>;}
+
+function Card({p}){
+  return (
+    <div className={"card"+(p.relampago?" hot":"")}>
+      <div className="thumb">
+        {p.img?<img src={p.img} alt={p.nome} onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='block'}}/>:null}
+        <div className="thumb-fallback" style={{display:p.img?'none':'block'}}><IconGear/><div className="fb-code">{p.codigo}</div></div>
+        {p.relampago && <span className="hot-badge">⚡ Relampago</span>}
+        {p.marca && <span className="brand-badge">{p.marca}</span>}
+      </div>
+      <div className="body">
+        <span className="cat">{p.categoria}</span>
+        <div className="name">{p.nome}</div>
+        <div className="code">Ref. {p.codigo||"—"}</div>
+        {p.equivCod && p.equivCod.length>0 && <div className="equiv">Tambem serve p/: {p.equivCod.map((c,i)=>[i>0?" · ":"",<b key={i}>{c}</b>])}</div>}
+        {p.qtd && <div className="stock">{p.qtd} em estoque</div>}
+        <div className="price-row">
+          {p.por>0
+            ? <span className="price-now">{brl(p.por)}</span>
+            : <span className="price-now consulta">Sob consulta</span>}
+        </div>
+        <a className="wpp" href={linkWpp(p)} target="_blank" rel="noopener"><IconWpp/> {p.por>0?"Pedir no WhatsApp":"Consultar no WhatsApp"}</a>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [q,setQ]=useState("");
+  const [cat,setCat]=useState("Todos");
+  const clock=useCountdown();
+  const categorias=["Todos",...TOP_GRUPOS];
+  const temRelampago=PRODUTOS.some(p=>p.relampago);
+  const filtrados=useMemo(()=>{
+    const t=q.trim().toLowerCase();
+    return PRODUTOS.filter(p=>{
+      const okCat=cat==="Todos"||p.categoria===cat;
+      const alvo=[p.nome,p.codigo,p.categoria,p.marca||"",p.equiv||""].join(" ").toLowerCase();
+      return okCat && (!t || alvo.includes(t));
+    });
+  },[q,cat]);
+  return (
+    <React.Fragment>
+      <header><div className="wrap head-row">
+        <div className="brand"><h1>{LOJA}</h1><span className="tag">ESTOQUE FINAL</span></div>
+        <span className="head-sub">{SUBTITULO}</span>
+      </div></header>
+      {temRelampago&&<div className="flash"><div className="flash-inner">
+        <span className="flash-title"><span className="bolt">⚡</span>Oferta relampago de hoje</span>
+        <span className="countdown"><span className="cd-label">Acaba em</span><span className="cd-clock">{clock}</span></span>
+      </div></div>}
+      <div className="toolbar"><div className="wrap">
+        <div className="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" placeholder="Buscar por nome, codigo, marca ou equivalente…" value={q} onChange={e=>setQ(e.target.value)}/>
+        </div>
+        <div className="chips">{categorias.map(c=><span key={c} className={"chip"+(cat===c?" on":"")} onClick={()=>setCat(c)}>{c}</span>)}</div>
+      </div></div>
+      <div className="wrap">
+        <div className="count">{filtrados.length} {filtrados.length===1?"peca":"pecas"}</div>
+        {filtrados.length>0?<div className="grid">{filtrados.map((p,i)=><Card key={(p.codigo||"")+i} p={p}/>)}</div>:<div className="empty"><strong>Nada encontrado</strong>Tente outro nome, codigo ou equivalente.</div>}
+      </div>
+      <footer><div className="wrap">{LOJA} — {SUBTITULO}<br/>Duvidas? <a className="wpp-foot" href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener">Fale no WhatsApp</a></div></footer>
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
